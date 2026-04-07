@@ -149,7 +149,7 @@ namespace BeetleUtils
                 {
                     if (nametag.key == beetle)
                     {
-                        return nametag.value.nameText.text;
+                        return nametag.value.name;
                     }
                 }
             }
