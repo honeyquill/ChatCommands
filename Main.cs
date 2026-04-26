@@ -34,7 +34,7 @@ namespace ChatCommands
 
         private void CommandHandler()
         {
-            if(!IsHost()) return;
+            if (!IsHost()) return;
 
             foreach (var command in _commands.Select(kvp => kvp.Value))
             {

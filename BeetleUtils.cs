@@ -1,6 +1,7 @@
 ﻿using Il2Cpp;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Unity.Collections;
 using Unity.Netcode;
@@ -106,8 +107,14 @@ namespace BeetleUtils
 
         public static bool IsHost()
         {
-            if (GetLocalBeetle() == null) return false;
-            return GetLocalBeetle().IsHost;
+            try
+            {
+                return Object.FindObjectsOfType<Il2Cpp.BeetleActor>().First(b => b.IsLocalPlayer).IsHost;
+            }
+            catch
+            {
+                return false; //if there is no local player, we're not host
+            }
         }
 
         public static void ApplyModifer(ModifierType modifier, DungBall dungBall, float duration)
