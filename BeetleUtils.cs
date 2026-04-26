@@ -6,11 +6,22 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
 namespace BeetleUtils
 {
+
     public static class BeetleUtils
     {
-        public static void Teleport(ulong beetleID)
+        public static void respawnall()
+        {
+            var prefabSpawner = UnityEngine.Object.FindObjectsOfType<Il2Cpp.NetworkPrefabSpawner>()[0];
+            foreach (var beetle in GetAllBeetles())
+            {
+                prefabSpawner.SpawnClassAndSetTeam(beetle.OwnerClientId, beetle.Team, (int)beetle.ClassData.BeetleType);
+            }
+        }
+
+        public static void Teleport(ulong beetleID, Vector3 Pos, Quaternion rotation)
         {
             BeetleActor beetleActor = GetActorByID(beetleID);
             var MapInitializer = UnityEngine.Object.FindObjectsOfType<Il2Cpp.MapInitializer>()[0];
@@ -19,8 +30,8 @@ namespace BeetleUtils
             Vector3 OriginalSpawnPos = MapInitializer.SpawnPositions[0].spawnTransform.position;
             Quaternion OriginalSpawnRotaion = MapInitializer.SpawnPositions[0].spawnTransform.rotation;
 
-            MapInitializer.SpawnPositions[0].spawnTransform.position = beetleActor.transform.position;
-            MapInitializer.SpawnPositions[0].spawnTransform.rotation = beetleActor.transform.rotation;
+            MapInitializer.SpawnPositions[0].spawnTransform.position = Pos;
+            MapInitializer.SpawnPositions[0].spawnTransform.rotation = rotation;
 
             prefabSpawner.SpawnClassAndSetTeam(beetleID, TeamType.Blue, (int)beetleActor.ClassData.BeetleType);
             GetActorByID(beetleID)._team.Value = (int)beetleActor.Team;
@@ -86,11 +97,9 @@ namespace BeetleUtils
 
         public static BeetleActor GetLocalBeetle()
         {
-            BeetleActor[] allBeetles = GetAllBeetles();
-            if (allBeetles.Length == 0) { return null; }
-            foreach (var beetle in allBeetles)
+            if (NetworkActor.LocalActor is BeetleActor beetle)
             {
-                if (beetle.IsLocalPlayer) return beetle;
+                return beetle;
             }
             return null;
         }
@@ -104,6 +113,14 @@ namespace BeetleUtils
         public static void ApplyModifer(ModifierType modifier, DungBall dungBall, float duration)
         {
             dungBall.ModifiersController.AddModifierRpcDispatcher(modifier, duration);
+        }
+
+        public static void ShowPopUp(string text, PopupManager.Position Pos, float Duration, Color? color = default, float? fadeOutTime = 0f)
+        {
+            if (color == default) color = Color.white;
+            var PopUpColor = new Il2CppSystem.Nullable<Color>((Color)color);
+            var PopUpFadeTime = new Il2CppSystem.Nullable<float>((float)fadeOutTime);
+            PopupManager.Instance.ShowSimpleTextPopup(text, Pos, Duration, PopUpColor, PopUpFadeTime);
         }
 
         public static List<(string player, string message)> GetChatHistory()
@@ -149,7 +166,7 @@ namespace BeetleUtils
                 {
                     if (nametag.key == beetle)
                     {
-                        return nametag.value.name;
+                        return nametag.value.nameText.text;
                     }
                 }
             }
@@ -158,7 +175,7 @@ namespace BeetleUtils
         }
         public static void appyForce(BeetleActor beetle, ForceParams force)
         {
-            beetle.AddForce(force); 
+            beetle.AddForce(force);
         }
         public static string GetBeetletype(BeetleActor beetle)
         {

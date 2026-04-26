@@ -16,7 +16,8 @@ namespace ChatCommands
     {
         private string _newestMsg;
         private const char CommandPrefix = '!';
-        
+        private int newestIndex = -1;
+
         private readonly Dictionary<string, ChatCommand> _commands =
             new Dictionary<string, ChatCommand>();
         
@@ -33,6 +34,8 @@ namespace ChatCommands
 
         private void CommandHandler()
         {
+            if(!IsHost()) return;
+
             foreach (var command in _commands.Select(kvp => kvp.Value))
             {
                 command.Update();
@@ -74,12 +77,12 @@ namespace ChatCommands
             if (history == null || history.Count == 0)
                 return null;
 
-            var newestIndex = history.Count - 1;
-            var lastMessage = _newestMsg;
+            if (newestIndex == history.Count -1) return null;
+            newestIndex = history.Count - 1;
             _newestMsg = history[newestIndex].message?.ToLower();
             Debug.Assert(_newestMsg != null, nameof(_newestMsg) + " != null");
 
-            if (_newestMsg == lastMessage) return null;
+
             if (_newestMsg.ToCharArray()[0] != CommandPrefix) return null;
 
             var withoutPrefix = _newestMsg.Substring(1);
